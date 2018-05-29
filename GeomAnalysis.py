@@ -70,23 +70,6 @@ def bondAngles(positions, distances):
 		angle = 180-np.arccos(np.dot(e_ij,e_jk))*180/np.pi
 		print(str(j-1) +" "+ str(j) +" "+ str(j+1) + " " + str(angle))
 
-
-	"""
-	for z in range(len(distances)):
-
-		if((1. == distances[z][0] or 1. == distances[z][1]) and (0. == distances[z][0] or 0. == distances[z][1])):
-			D_ij = distances[z][2]
-
-		if((1. == distances[z][0] or 1. == distances[z][1]) and (2. == distances[z][0] or 2. == distances[z][1])):
-			D_jk = distances[z][2]
-
-	e_ij = (positions[1]-positions[0])/D_ij
-	e_jk = (positions[2]-positions[1])/D_jk
-
-	angle = np.arccos(np.dot(e_ij,e_jk))
-	print(angle)
-	"""
-
 	return None
 
 
