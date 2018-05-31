@@ -52,31 +52,48 @@ def bondLenghts(positions):
 
 def bondAngles(positions, distances):
 
-	#doesn't always give the angle between neighboring atoms eg ijk = 2,3,4 gives the angle between the oxygen and two hydrogens even though oxygen is not bound to either hydrogen
-	#TODO: Get bond angles for all atom combinations with d_ij and d_jk < 4
-	for j in range(1,atomCount-1):
+	"""
+	Now gives the correct angles. However it needs some optimization as there are 5 for loops which can probably cut down to 3
+	"""
 
-		for z in range(len(distances)):
+	bondDis = [distances[x] for x in range(len(distances)) if distances[x][2] < 4]
+	bondDis = np.reshape(bondDis, (-1,3))
+	angles = np.array([])
 
-			if((j == distances[z][0] or j == distances[z][1]) and (j-1 == distances[z][0] or j-1 == distances[z][1])):
-				D_ij = distances[z][2]
+	for count in range(len(bondDis)):
+		for j in range(1,atomCount-1):
+			for i in range(0,j):
 
-			if((j == distances[z][0] or j == distances[z][1]) and (j+1 == distances[z][0] or j+1 == distances[z][1])):
-				D_jk = distances[z][2]
+				if(j == i):
+					continue
 
-		e_ij = (positions[1]-positions[0])/D_ij
-		e_jk = (positions[2]-positions[1])/D_jk
+				elif((i == bondDis[count][0] or i == bondDis[count][1]) and (j == bondDis[count][0] or j == bondDis[count][1])):
+					D_ij = bondDis[count][2]
+					e_ij = (positions[j]-positions[i])/D_ij
 
-		angle = 180-np.arccos(np.dot(e_ij,e_jk))*180/np.pi
-		print(str(j-1) +" "+ str(j) +" "+ str(j+1) + " " + str(angle))
+					for k in range(j,atomCount):
 
-	return None
+
+						if(k == j or k == i):
+							continue
+
+						for count2 in range(len(bondDis)):
+							if((j == bondDis[count2][0] or j == bondDis[count2][1]) and (k == bondDis[count2][0] or k == bondDis[count2][1])):
+								D_jk = bondDis[count2][2]
+								e_jk = (positions[k]-positions[j])/D_jk
+
+								angle = 180 - np.arccos(np.dot(e_ij,e_jk))*180/np.pi
+								angles = np.append(angles, [i,j,k,angle])
+								angles = np.reshape(angles, (-1,4))
+								
+	return angles
 
 
 def main(positions):
 
 	posMain = pos(positions)
 	lenghts = bondLenghts(posMain)
+	angles = bondAngles(posMain,lenghts)
 
 	print("Number of atoms: ")
 	print(atomCount)
@@ -84,10 +101,12 @@ def main(positions):
 	print(posMain)
 	print("\nBond lenghts:")
 	print(lenghts)
+	print("\nBond Angles:")
+	print(angles)
 
 	return None
 
-bondAngles(pos(geomCont),bondLenghts(pos(geomCont)))
+#bondAngles(pos(geomCont),bondLenghts(pos(geomCont)))
 
-#main(geomCont)
+main(geomCont)
 molGeom.close()
