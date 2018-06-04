@@ -25,6 +25,10 @@ def pos(positions):
 	posMatrix = np.reshape(posMatrix, (len(positions),3))
 	return posMatrix
 
+def v_(atom1, atom2, positions = pos(geomCont)):
+
+	v_ij = (positions[atom2]-positions[atom1])
+	return v_ij
 
 def bondLenghts(positions):
 
@@ -48,52 +52,73 @@ def bondLenghts(positions):
 	distances = np.reshape(distances, (-1,3))
 	return distances
 
+def v_(atom1, atom2, positions = pos(geomCont)):
 
+	v_ij = (positions[atom2]-positions[atom1])
+	return v_ij
 
-def bondAngles(positions, distances):
+def bondAngles(positions):
 
-	"""
-	Now gives the correct angles. However it needs some optimization as there are 5 for loops which can probably cut down to 3
-	"""
-
-	bondDis = [distances[x] for x in range(len(distances)) if distances[x][2] < 4]
-	bondDis = np.reshape(bondDis, (-1,3))
 	angles = np.array([])
 
-	for count in range(len(bondDis)):
-		for j in range(1,atomCount-1):
-			for i in range(0,j):
+	for j in range(1,atomCount-1):
+		for i in range(0,j):
 
-				if(j == i):
+			if(j == i):
+				continue
+
+			for k in range(j,atomCount):
+
+				if(k == j or k == i):
 					continue
 
-				elif((i == bondDis[count][0] or i == bondDis[count][1]) and (j == bondDis[count][0] or j == bondDis[count][1])):
-					D_ij = bondDis[count][2]
-					e_ij = (positions[j]-positions[i])/D_ij
+				elif(npl.norm(v_(j,i)) <= 4. and npl.norm(v_(j,k)) <= 4.):
+					e_ji = v_(j,i)/npl.norm(v_(j,i))
+					e_jk = v_(j,k)/npl.norm(v_(j,k))
 
-					for k in range(j,atomCount):
-
-
-						if(k == j or k == i):
-							continue
-
-						for count2 in range(len(bondDis)):
-							if((j == bondDis[count2][0] or j == bondDis[count2][1]) and (k == bondDis[count2][0] or k == bondDis[count2][1])):
-								D_jk = bondDis[count2][2]
-								e_jk = (positions[k]-positions[j])/D_jk
-
-								angle = 180 - np.arccos(np.dot(e_ij,e_jk))*180/np.pi
-								angles = np.append(angles, [i,j,k,angle])
-								angles = np.reshape(angles, (-1,4))
-								
+					angle = np.arccos(np.dot(e_ji,e_jk))*180/np.pi
+					angles = np.append(angles, [i,j,k,angle])
+					angles = np.reshape(angles, (-1,4))
+						
 	return angles
 
+def outOfPlaneAngles(positions):
+
+	oOPAngles = np.array([])
+
+
+	for l in range(atomCount):
+
+		for j in range(atomCount):
+
+			for k in range(atomCount):
+
+				for i in range(0,k):
+
+					if(l != j and l != i and l != k and k != j and k != i and j != i and npl.norm(v_(j,i)) <= 4. and npl.norm(v_(j,k)) <= 4. and npl.norm(v_(j,l)) <= 4.):
+						e_ji = v_(j,i)/npl.norm(v_(j,i))
+						e_jk = v_(j,k)/npl.norm(v_(j,k))
+						e_jl = v_(j,l)/npl.norm(v_(j,l))
+
+						c_ji_jk = np.cross(e_ji,e_jk)
+
+						angle_jkl = np.arccos(np.dot(e_ji,e_jk))
+
+						oopa = np.dot(c_ji_jk,e_jl)/np.sin(angle_jkl)*180/np.pi
+
+						oOPAngles = np.append(oOPAngles, [int(l),int(i),int(j),int(k),oopa])
+						oOPAngles = np.reshape(oOPAngles, (-1,5))
+
+
+	oOPAngles = np.reshape(oOPAngles, (-1,5))
+	return oOPAngles
 
 def main(positions):
 
 	posMain = pos(positions)
 	lenghts = bondLenghts(posMain)
-	angles = bondAngles(posMain,lenghts)
+	angles = bondAngles(posMain)
+	oop = outOfPlaneAngles(posMain)
 
 	print("Number of atoms: ")
 	print(atomCount)
@@ -103,10 +128,10 @@ def main(positions):
 	print(lenghts)
 	print("\nBond Angles:")
 	print(angles)
+	print("\nOut of Plane Angles:")
+	print(oop)
 
 	return None
-
-#bondAngles(pos(geomCont),bondLenghts(pos(geomCont)))
 
 main(geomCont)
 molGeom.close()
