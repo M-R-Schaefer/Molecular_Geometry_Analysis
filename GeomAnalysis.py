@@ -206,16 +206,10 @@ def PMI(I):
 
 def rotorType(PMI):
 
-	if(PMI[0] == PMI[1] == PMI[2]):
-		return "Spherical Top"
-	elif(PMI[1]-PMI[0] > 10**-4  and PMI[1] == PMI[2]):
-		return "Linear"
-	elif(PMI[0] == PMI[1] < PMI[2]):
-		return "Oblate Symmetric Top"
-	elif(PMI[0] < PMI[1] == PMI[2]):
-		return "Prolate Symmetric Top"
-	else:
-		return "Asymmetric Top"
+	rotType = np.select([PMI[0] == PMI[1] == PMI[2], PMI[1]-PMI[0] > 10**-4  and PMI[1] == PMI[2], PMI[0] == PMI[1] < PMI[2], PMI[0] < PMI[1] == PMI[2], PMI[0] != PMI[1] != PMI[2]], \
+						["Spherical Top", "Linear", "Oblate Symmetric Top", "Prolate Symmetric Top", "Asymmetric Top"])
+	
+	return rotType
 
 def rotConsts(PMI):
 
